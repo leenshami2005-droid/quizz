@@ -381,7 +381,7 @@
                     <i class="fa-solid fa-user-lock text-xl"></i>
                 </div>
                 <h3 class="text-lg font-bold text-slate-800">Teacher Authentication</h3>
-                <p class="text-xs text-slate-500 mt-1">Enter the passcode to unlock teacher options. (Default: <code class="bg-slate-100 px-1 text-indigo-600">admin123</code>)</p>
+                <p class="text-xs text-slate-500 mt-1">Enter your secret passcode to unlock teacher options.</p>
             </div>
 
             <form onsubmit="verifyPasscode(event)" class="space-y-4">
@@ -416,7 +416,7 @@
             course: "CS101: Introduction to Computer Science",
             quiz: "Midterm Quiz Results",
             passMark: 50,
-            passcode: "admin123"
+            passcode: "ES2511976"
         };
         let isTeacherUnlocked = false;
         let isTeacherView = false;
@@ -455,7 +455,7 @@
             document.getElementById('cfgCourse').value = config.course;
             document.getElementById('cfgQuiz').value = config.quiz;
             document.getElementById('cfgPass').value = config.passMark;
-            document.getElementById('cfgPasscode').value = config.passcode || "admin123";
+            document.getElementById('cfgPasscode').value = config.passcode || "ES2511976";
             
             document.getElementById('headerCourseTitle').textContent = config.course;
             document.getElementById('headerQuizTitle').textContent = config.quiz;
@@ -576,7 +576,7 @@
             config.course = document.getElementById('cfgCourse').value || "Course";
             config.quiz = document.getElementById('cfgQuiz').value || "Quiz";
             config.passMark = Number(document.getElementById('cfgPass').value) || 50;
-            config.passcode = document.getElementById('cfgPasscode').value.trim() || "admin123";
+            config.passcode = document.getElementById('cfgPasscode').value.trim() || "ES2511976";
 
             document.getElementById('headerCourseTitle').textContent = config.course;
             document.getElementById('headerQuizTitle').textContent = config.quiz;
