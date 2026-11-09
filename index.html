@@ -1,336 +1,283 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>University Quiz Grade Lookup Portal</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS for Excel Parsing -->
+<!-- ... existing code -->
+    <!-- SheetJS for Reading Excel (.xlsx, .xls, .csv) Files -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- FontAwesome Icons -->
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col justify-between">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
 
-    <!-- Header / Navbar -->
-    <header class="bg-indigo-900 text-white shadow-md">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="bg-indigo-700 p-2.5 rounded-xl shadow-inner">
-                    <i class="fa-solid fa-graduation-cap text-xl text-indigo-200"></i>
+    <!-- HEADER / NAVIGATION -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-indigo-200">
+                    <i class="fa-solid font-bold fa-graduation-cap"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg leading-tight">Quiz Grade Portal</h1>
-                    <p class="text-xs text-indigo-300">University Student & Faculty System</p>
+                    <h1 class="font-bold text-slate-900 leading-tight text-lg sm:text-xl" id="headerCourseTitle">Computer Science 101</h1>
+                    <p class="text-xs text-slate-500 font-medium" id="headerQuizTitle">Quiz 1 Results Portal</p>
                 </div>
             </div>
-            <button onclick="openTeacherModal()" class="bg-indigo-800 hover:bg-indigo-700 border border-indigo-700 text-indigo-100 text-sm px-4 py-2 rounded-xl transition font-medium flex items-center space-x-2 shadow-sm">
-                <i class="fa-solid fa-lock text-xs"></i>
-                <span>Teacher Panel</span>
-            </button>
+
+            <div class="flex items-center gap-2">
+                <button id="navStudentBtn" onclick="switchTab('student')" class="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 bg-indigo-50 text-indigo-700 shadow-sm">
+                    <i class="fa-solid fa-user-graduate mr-1.5"></i> Student Portal
+                </button>
+                <button id="navTeacherBtn" onclick="openTeacherAuthModal()" class="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-lock mr-1.5 text-xs"></i> Teacher Panel
+                </button>
+            </div>
         </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="max-w-xl w-full mx-auto px-4 py-10 flex-grow">
-        
-        <!-- Student Lookup Card -->
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden transition-all duration-300">
-            <div class="bg-gradient-to-r from-indigo-900 to-indigo-800 p-6 text-white text-center">
-                <h2 class="text-xl font-bold mb-1">Check Your Quiz Result</h2>
-                <p class="text-indigo-200 text-sm">Enter your university student ID below</p>
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- STUDENT PORTAL SECTION -->
+        <section id="studentPortal" class="space-y-8 transition-opacity duration-300">
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-indigo-700 via-indigo-600 to-blue-600 rounded-3xl p-6 sm:p-10 text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 opacity-10 text-white">
+                    <i class="fa-solid fa-award text-9xl"></i>
+                </div>
+                <div class="max-w-2xl relative z-10">
+                    <span class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold tracking-wide uppercase text-indigo-100 border border-white/20">Official Grade Lookup</span>
+                    <h2 class="text-2xl sm:text-4xl font-extrabold mt-3 mb-2 leading-tight">Check Your Quiz Mark</h2>
+                    <p class="text-indigo-100 text-sm sm:text-base opacity-90">Enter your Student ID below to instantly view your score, breakdown, and pass/fail status.</p>
+                </div>
             </div>
 
-            <div class="p-6 sm:p-8 space-y-6">
-                <div class="space-y-2">
-                    <label for="studentIdInput" class="block text-sm font-semibold text-slate-700">Student ID</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                            <i class="fa-solid fa-id-card"></i>
-                        </span>
-                        <input type="text" id="studentIdInput" placeholder="e.g., 20231045" 
-                            class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:bg-white focus:outline-none transition text-slate-800 font-medium">
+            <!-- Search Card -->
+            <div class="max-w-xl mx-auto -mt-6 sm:-mt-10 relative z-20">
+                <div class="bg-white rounded-2xl shadow-xl p-4 sm:p-6 border border-slate-100">
+                    <form onsubmit="handleSearch(event)" class="space-y-4">
+                        <label for="studentIdInput" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Enter Your Student ID</label>
+                        <div class="relative flex items-center">
+                            <i class="fa-solid fa-id-card absolute left-4 text-slate-400 text-lg"></i>
+                            <input type="text" id="studentIdInput" placeholder="e.g. 2023001" required class="w-full pl-12 pr-28 py-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all">
+                            <button type="submit" class="absolute right-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-lg transition-all shadow-md hover:shadow-indigo-200">
+                                Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Result Display Card -->
+            <div id="resultCard" class="hidden max-w-xl mx-auto transition-all duration-300">
+                <!-- Result populated by JS -->
+            </div>
+
+            <!-- Not Found Card -->
+            <div id="notFoundCard" class="hidden max-w-xl mx-auto bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center space-y-3">
+                <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                    <i class="fa-solid fa-magnifying-glass-question"></i>
+                </div>
+                <h3 class="font-bold text-amber-900 text-lg">Student ID Not Found</h3>
+                <p class="text-sm text-amber-700">Please make sure you entered your correct Student ID. If you believe this is an error, please contact your professor.</p>
+            </div>
+        </section>
+
+        <!-- TEACHER PANEL SECTION -->
+        <section id="teacherPanel" class="hidden space-y-8">
+            <div class="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="px-3 py-1 bg-indigo-500/30 text-indigo-300 rounded-full text-xs font-semibold uppercase tracking-wider border border-indigo-500/30">Instructor Management</span>
+                    <h2 class="text-2xl font-bold mt-2">Grade Administration Dashboard</h2>
+                    <p class="text-slate-400 text-sm mt-1">Upload grade sheets, manage course details, and update student marks.</p>
+                </div>
+                <button onclick="switchTab('student')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-xl border border-slate-700 transition">
+                    <i class="fa-solid fa-eye mr-2"></i> Preview Student View
+                </button>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-users"></i>
                     </div>
-                </div>
-
-                <button onclick="lookupGrade()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center justify-center space-x-2">
-                    <span>View Result</span>
-                    <i class="fa-solid fa-arrow-right text-sm"></i>
-                </button>
-
-                <!-- Result Box (Hidden by default) -->
-                <div id="resultContainer" class="hidden mt-6 pt-6 border-t border-slate-100 animate-fadeIn">
-                    <!-- Dynamic result content inserted via JS -->
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-        &copy; 2026 University Quiz Portal. Secure Student Lookup System.
-    </footer>
-
-    <!-- Teacher Login & Management Modal -->
-    <div id="teacherModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
-            
-            <!-- Modal Header -->
-            <div class="bg-indigo-900 text-white p-5 flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-shield-halved text-indigo-300"></i>
-                    <h3 class="font-bold text-lg">Teacher Management Panel</h3>
-                </div>
-                <button onclick="closeTeacherModal()" class="text-indigo-300 hover:text-white p-1.5 rounded-lg transition">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <!-- Login View -->
-            <div id="teacherLoginView" class="p-6 sm:p-8 space-y-5">
-                <p class="text-sm text-slate-600">Please enter the secure instructor password to manage grades and export code updates.</p>
-                <div class="space-y-2">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Passcode</label>
-                    <input type="password" id="teacherPasswordInput" placeholder="Enter password" 
-                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:bg-white focus:outline-none transition">
-                </div>
-                <button onclick="verifyTeacherPassword()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition shadow-md">
-                    Unlock Panel
-                </button>
-                <p id="loginError" class="text-red-500 text-xs text-center hidden font-medium">Incorrect password. Please try again.</p>
-            </div>
-
-            <!-- Management View (Hidden until unlocked) -->
-            <div id="teacherDashboardView" class="p-6 overflow-y-auto space-y-6 hidden flex-grow">
-                
-                <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex items-center justify-between">
                     <div>
-                        <h4 class="font-semibold text-indigo-900 text-sm">System Status</h4>
-                        <p id="studentCountBadge" class="text-xs text-indigo-700 mt-0.5">0 student records loaded</p>
-                    </div>
-                    <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center space-x-1">
-                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                        <span>Active</span>
-                    </span>
-                </div>
-
-                <!-- Add Individual Student Section -->
-                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3">
-                    <h4 class="text-sm font-semibold text-slate-700 flex items-center">
-                        <i class="fa-solid fa-user-plus text-indigo-600 mr-2"></i>Add Individual Student
-                    </h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input type="text" id="newStudentId" placeholder="Student ID (e.g., 20231005)" class="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <input type="text" id="newStudentName" placeholder="Student Name" class="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <input type="text" id="newStudentGrade" placeholder="Grade (e.g., 19/20)" class="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <input type="text" id="newStudentRemarks" placeholder="Remarks (e.g., Great Job)" class="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <button onclick="addSingleStudent()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-sm transition shadow-sm flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-plus text-xs"></i>
-                        <span>Save Student Record</span>
-                    </button>
-                    <p id="addSuccessMsg" class="text-xs text-emerald-600 font-medium text-center hidden">Student added successfully!</p>
-                </div>
-
-                <!-- Bulk Excel Upload Section -->
-                <div class="space-y-3">
-                    <h4 class="text-sm font-semibold text-slate-700"><i class="fa-solid fa-file-excel text-emerald-600 mr-2"></i>Upload Grades Excel / CSV</h4>
-                    <div class="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center hover:border-indigo-400 transition bg-slate-50 cursor-pointer relative">
-                        <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" onchange="handleFileUpload(event)" class="absolute inset-0 opacity-0 cursor-pointer">
-                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-500 mb-1"></i>
-                        <p class="text-xs font-medium text-slate-700">Click to browse or drag your file here</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">Supports Excel (.xlsx, .xls) and CSV files</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Total Students</p>
+                        <h4 class="text-2xl font-black text-slate-800" id="statTotalStudents">0</h4>
                     </div>
                 </div>
 
-                <!-- Publish / Export Section -->
-                <div class="border-t border-slate-100 pt-4 space-y-3">
-                    <h4 class="text-sm font-semibold text-slate-700"><i class="fa-solid fa-globe text-indigo-600 mr-2"></i>Publish Updates for All Students</h4>
-                    <p class="text-xs text-slate-500">Download the updated code file and replace it in your GitHub repository (`quizz`) so all students can see the new records from any device.</p>
-                    <button onclick="downloadUpdatedCode()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 px-4 rounded-xl transition text-sm flex items-center justify-center space-x-2 shadow-sm">
-                        <i class="fa-solid fa-download"></i>
-                        <span>Download Updated index.html</span>
-                    </button>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-calculator"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Class Average</p>
+                        <h4 class="text-2xl font-black text-slate-800" id="statClassAverage">0.0</h4>
+                    </div>
                 </div>
 
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Pass Rate</p>
+                        <h4 class="text-2xl font-black text-slate-800" id="statPassRate">0%</h4>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Passing Mark</p>
+                        <h4 class="text-2xl font-black text-slate-800" id="statPassingMark">50</h4>
+                    </div>
+                </div>
             </div>
 
-        </div>
-    </div>
+            <!-- Dashboard Content Tabs -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="border-b border-slate-200 bg-slate-50 px-6 py-3 flex flex-wrap gap-2">
+                    <button onclick="switchTeacherSubTab('upload')" id="tabBtnUpload" class="px-4 py-2 rounded-lg text-sm font-semibold bg-white text-indigo-600 shadow-sm border border-slate-200">
+                        <i class="fa-solid fa-file-excel mr-2 text-emerald-600"></i> Upload Excel / CSV
+                    </button>
+                    <button onclick="switchTeacherSubTab('records')" id="tabBtnRecords" class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-white hover:text-slate-800 transition">
+                        <i class="fa-solid fa-table-list mr-2 text-indigo-500"></i> Student Records
+                    </button>
+                    <button onclick="switchTeacherSubTab('export')" id="tabBtnExport" class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-white hover:text-slate-800 transition">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2 text-blue-500"></i> Publish to GitHub
+                    </button>
+                    <button onclick="switchTeacherSubTab('settings')" id="tabBtnSettings" class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-white hover:text-slate-800 transition">
+                        <i class="fa-solid fa-gear mr-2 text-slate-500"></i> Settings
+                    </button>
+                </div>
 
-    <!-- JavaScript Application Logic -->
-    <script>
-        // Default student database container
-        let studentsData = JSON.parse(localStorage.getItem('quiz_students_db')) || [
-            { id: "20231001", name: "Ahmed Ali", quiz: "Quiz 1", grade: "18/20", remarks: "Excellent" },
-            { id: "20231002", name: "Sara Omar", quiz: "Quiz 1", grade: "20/20", remarks: "Perfect Score" }
-        ];
-
-        function updateStudentCount() {
-            document.getElementById('studentCountBadge').innerText = `${studentsData.length} student records loaded`;
-        }
-        updateStudentCount();
-
-        function openTeacherModal() {
-            document.getElementById('teacherModal').classList.remove('hidden');
-            document.getElementById('teacherPasswordInput').value = '';
-            document.getElementById('loginError').classList.add('hidden');
-        }
-
-        function closeTeacherModal() {
-            document.getElementById('teacherModal').classList.add('hidden');
-        }
-
-        function verifyTeacherPassword() {
-            const pass = document.getElementById('teacherPasswordInput').value;
-            if (pass === "ES2511976") {
-                document.getElementById('teacherLoginView').classList.add('hidden');
-                document.getElementById('teacherDashboardView').classList.remove('hidden');
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
-            }
-        }
-
-        function addSingleStudent() {
-            const id = document.getElementById('newStudentId').value.trim();
-            const name = document.getElementById('newStudentName').value.trim();
-            const grade = document.getElementById('newStudentGrade').value.trim();
-            const remarks = document.getElementById('newStudentRemarks').value.trim();
-
-            if (!id || !grade) {
-                alert("Please enter at least a Student ID and Grade.");
-                return;
-            }
-
-            // Check if student already exists, update or add
-            const existingIndex = studentsData.findIndex(s => String(s.id).trim() === id);
-            const newRecord = { id, name: name || "N/A", quiz: "Quiz 1", grade, remarks: remarks || "None" };
-
-            if (existingIndex >= 0) {
-                studentsData[existingIndex] = newRecord;
-            } else {
-                studentsData.push(newRecord);
-            }
-
-            localStorage.setItem('quiz_students_db', JSON.stringify(studentsData));
-            updateStudentCount();
-
-            // Clear inputs
-            document.getElementById('newStudentId').value = '';
-            document.getElementById('newStudentName').value = '';
-            document.getElementById('newStudentGrade').value = '';
-            document.getElementById('newStudentRemarks').value = '';
-
-            const msg = document.getElementById('addSuccessMsg');
-            msg.classList.remove('hidden');
-            setTimeout(() => msg.classList.add('hidden'), 3000);
-        }
-
-        function lookupGrade() {
-            const inputId = document.getElementById('studentIdInput').value.trim();
-            const container = document.getElementById('resultContainer');
-
-            if (!inputId) {
-                container.innerHTML = `<div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm font-medium text-center">Please enter your Student ID.</div>`;
-                container.classList.remove('hidden');
-                return;
-            }
-
-            const student = studentsData.find(s => String(s.id).trim() === inputId);
-
-            if (student) {
-                container.innerHTML = `
-                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-5 space-y-3">
-                        <div class="flex justify-between items-center border-b border-indigo-200/60 pb-3">
-                            <div>
-                                <span class="text-xs uppercase font-bold tracking-wider text-indigo-600">Student Name</span>
-                                <h3 class="font-bold text-slate-800 text-lg">${student.name || 'N/A'}</h3>
+                <div class="p-6">
+                    <!-- SUBTAB 1: EXCEL UPLOAD -->
+                    <div id="subtabUpload" class="space-y-6">
+                        <div class="border-2 border-dashed border-indigo-200 rounded-2xl p-8 text-center bg-indigo-50/40 hover:bg-indigo-50/80 transition cursor-pointer relative" id="dropZone">
+                            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleExcelUpload(event)">
+                            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner">
+                                <i class="fa-solid fa-file-excel"></i>
                             </div>
-                            <div class="text-right">
-                                <span class="text-xs uppercase font-bold tracking-wider text-indigo-600">ID</span>
-                                <p class="font-mono font-semibold text-slate-700">${student.id}</p>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 pt-1">
-                            <div class="bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
-                                <span class="text-xs text-slate-400 block font-medium">Grade</span>
-                                <span class="text-xl font-bold text-indigo-600">${student.grade || 'N/A'}</span>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
-                                <span class="text-xs text-slate-400 block font-medium">Remarks</span>
-                                <span class="text-sm font-semibold text-slate-700">${student.remarks || 'None'}</span>
-                            </div>
+                            <h3 class="text-lg font-bold text-slate-800">Upload Excel Sheet (.xlsx, .xls, .csv)</h3>
+                            <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Drag and drop your quiz spreadsheet here or click to browse. The sheet should have columns for Student ID, Name, and Mark.</p>
                         </div>
                     </div>
-                `;
-            } else {
-                container.innerHTML = `
-                    <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium text-center flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-circle-exclamation"></i>
-                        <span>No record found for ID: <strong>${inputId}</strong></span>
+
+                    <!-- SUBTAB 2: RECORDS -->
+                    <div id="subtabRecords" class="hidden space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-slate-800">Student List</h3>
+                            <button onclick="clearAllRecords()" class="text-xs font-semibold text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200 transition">
+                                <i class="fa-solid fa-trash mr-1"></i> Clear All Records
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs border-b border-slate-200">
+                                    <tr>
+                                        <th class="p-3">Student ID</th>
+                                        <th class="p-3">Name</th>
+                                        <th class="p-3">Mark</th>
+                                        <th class="p-3">Status</th>
+                                        <th class="p-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentTableBody" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                `;
+
+                    <!-- SUBTAB 3: PUBLISH TO GITHUB -->
+                    <div id="subtabExport" class="hidden max-w-xl space-y-5">
+                        <div class="bg-blue-50 border border-blue-200 rounded-2xl p-5 space-y-3">
+                            <h4 class="font-bold text-blue-900 flex items-center gap-2 text-base">
+                                <i class="fa-solid fa-globe"></i> Make Marks Available to All Students
+                            </h4>
+                            <p class="text-xs text-blue-700 leading-relaxed">
+                                After uploading your Excel sheet, click the button below to download the updated <strong>index.html</strong> file. Upload this file directly to your GitHub repository (<code>quizz</code>) to publish the marks for all students worldwide!
+                            </p>
+                            <button onclick="downloadUpdatedFile()" class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center gap-2">
+                                <i class="fa-solid fa-download"></i> Download Updated index.html
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SUBTAB 4: SETTINGS -->
+                    <div id="subtabSettings" class="hidden max-w-xl space-y-5">
+<!-- ... existing code -->
+        function switchTeacherSubTab(subtab) {
+            ['subtabUpload', 'subtabRecords', 'subtabExport', 'subtabSettings'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            ['tabBtnUpload', 'tabBtnRecords', 'tabBtnExport', 'tabBtnSettings'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.className = "px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-white hover:text-slate-800 transition";
+            });
+
+            if (subtab === 'upload') {
+                document.getElementById('subtabUpload').classList.remove('hidden');
+                document.getElementById('tabBtnUpload').className = "px-4 py-2 rounded-lg text-sm font-semibold bg-white text-indigo-600 shadow-sm border border-slate-200";
+            } else if (subtab === 'records') {
+                document.getElementById('subtabRecords').classList.remove('hidden');
+                document.getElementById('tabBtnRecords').className = "px-4 py-2 rounded-lg text-sm font-semibold bg-white text-indigo-600 shadow-sm border border-slate-200";
+            } else if (subtab === 'export') {
+                document.getElementById('subtabExport').classList.remove('hidden');
+                document.getElementById('tabBtnExport').className = "px-4 py-2 rounded-lg text-sm font-semibold bg-white text-indigo-600 shadow-sm border border-slate-200";
+            } else if (subtab === 'settings') {
+                document.getElementById('subtabSettings').classList.remove('hidden');
+                document.getElementById('tabBtnSettings').className = "px-4 py-2 rounded-lg text-sm font-semibold bg-white text-indigo-600 shadow-sm border border-slate-200";
             }
-            container.classList.remove('hidden');
+        }
+<!-- ... existing code -->
+        function saveCourseSettings() {
+            appState.courseTitle = document.getElementById('settingCourseTitle').value;
+            appState.quizTitle = document.getElementById('settingQuizTitle').value;
+            appState.maxScore = Number(document.getElementById('settingMaxScore').value) || 100;
+            appState.passingMark = Number(document.getElementById('settingPassingMark').value) || 50;
+            saveState();
+            alert('Settings updated successfully!');
         }
 
-        function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        // Export updated index.html with embedded student data for GitHub Pages
+        function downloadUpdatedFile() {
+            let fileContent = document.documentElement.outerHTML;
+            
+            // Replace default initial state inside html string
+            const stateString = JSON.stringify(appState, null, 4);
+            fileContent = fileContent.replace(/let appState = \{[\s\S]*?\};/, `let appState = ${stateString};`);
 
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const json = XLSX.utils.sheet_to_json(worksheet);
-
-                    if (json && json.length > 0) {
-                        studentsData = json.map(row => ({
-                            id: row.ID || row.StudentId || row['Student ID'] || row.id || Object.values(row)[0],
-                            name: row.Name || row.StudentName || row['Student Name'] || row.name || Object.values(row)[1],
-                            quiz: row.Quiz || row.Exam || "Quiz 1",
-                            grade: row.Grade || row.Mark || row.Score || Object.values(row)[2],
-                            remarks: row.Remarks || row.Note || ""
-                        })).filter(s => s.id);
-
-                        localStorage.setItem('quiz_students_db', JSON.stringify(studentsData));
-                        updateStudentCount();
-                        alert(`Successfully loaded ${studentsData.length} student records!`);
-                    } else {
-                        alert("The file appears to be empty or formatted incorrectly.");
-                    }
-                } catch (err) {
-                    console.error(err);
-                    alert("Error parsing file. Please ensure it is a valid Excel or CSV file.");
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        function downloadUpdatedCode() {
-            const htmlContent = document.documentElement.outerHTML;
-            const updatedHtml = htmlContent.replace(
-                /let studentsData = JSON\.parse\(localStorage\.getItem\('quiz_students_db'\)\) \|\| \[[\s\S]*?\];/,
-                `let studentsData = ${JSON.stringify(studentsData, null, 4)};`
-            );
-
-            const blob = new Blob([updatedHtml], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'index.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            const blob = new Blob(["<!DOCTYPE html>\n" + fileContent], { type: "text/html" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "index.html";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     </script>
 </body>
