@@ -78,7 +78,7 @@
 
     <!-- Teacher Login & Management Modal -->
     <div id="teacherModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+        <div class="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
             
             <!-- Modal Header -->
             <div class="bg-indigo-900 text-white p-5 flex justify-between items-center">
@@ -107,6 +107,7 @@
 
             <!-- Management View (Hidden until unlocked) -->
             <div id="teacherDashboardView" class="p-6 overflow-y-auto space-y-6 hidden flex-grow">
+                
                 <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex items-center justify-between">
                     <div>
                         <h4 class="font-semibold text-indigo-900 text-sm">System Status</h4>
@@ -118,24 +119,45 @@
                     </span>
                 </div>
 
+                <!-- Add Individual Student Section -->
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3">
+                    <h4 class="text-sm font-semibold text-slate-700 flex items-center">
+                        <i class="fa-solid fa-user-plus text-indigo-600 mr-2"></i>Add Individual Student
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input type="text" id="newStudentId" placeholder="Student ID (e.g., 20231005)" class="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="text" id="newStudentName" placeholder="Student Name" class="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="text" id="newStudentGrade" placeholder="Grade (e.g., 19/20)" class="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="text" id="newStudentRemarks" placeholder="Remarks (e.g., Great Job)" class="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <button onclick="addSingleStudent()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-sm transition shadow-sm flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Save Student Record</span>
+                    </button>
+                    <p id="addSuccessMsg" class="text-xs text-emerald-600 font-medium text-center hidden">Student added successfully!</p>
+                </div>
+
+                <!-- Bulk Excel Upload Section -->
                 <div class="space-y-3">
                     <h4 class="text-sm font-semibold text-slate-700"><i class="fa-solid fa-file-excel text-emerald-600 mr-2"></i>Upload Grades Excel / CSV</h4>
-                    <div class="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-indigo-400 transition bg-slate-50 cursor-pointer relative">
+                    <div class="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center hover:border-indigo-400 transition bg-slate-50 cursor-pointer relative">
                         <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" onchange="handleFileUpload(event)" class="absolute inset-0 opacity-0 cursor-pointer">
-                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-500 mb-2"></i>
-                        <p class="text-sm font-medium text-slate-700">Click to browse or drag your file here</p>
-                        <p class="text-xs text-slate-400 mt-1">Supports Excel (.xlsx, .xls) and CSV files</p>
+                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-500 mb-1"></i>
+                        <p class="text-xs font-medium text-slate-700">Click to browse or drag your file here</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Supports Excel (.xlsx, .xls) and CSV files</p>
                     </div>
                 </div>
 
-                <div class="border-t border-slate-100 pt-5 space-y-3">
+                <!-- Publish / Export Section -->
+                <div class="border-t border-slate-100 pt-4 space-y-3">
                     <h4 class="text-sm font-semibold text-slate-700"><i class="fa-solid fa-globe text-indigo-600 mr-2"></i>Publish Updates for All Students</h4>
-                    <p class="text-xs text-slate-500">After uploading your grades, download the updated code file and replace it in your GitHub repository (`quizz`) to instantly update the live site for all students.</p>
+                    <p class="text-xs text-slate-500">Download the updated code file and replace it in your GitHub repository (`quizz`) so all students can see the new records from any device.</p>
                     <button onclick="downloadUpdatedCode()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 px-4 rounded-xl transition text-sm flex items-center justify-center space-x-2 shadow-sm">
                         <i class="fa-solid fa-download"></i>
                         <span>Download Updated index.html</span>
                     </button>
                 </div>
+
             </div>
 
         </div>
@@ -172,6 +194,41 @@
             } else {
                 document.getElementById('loginError').classList.remove('hidden');
             }
+        }
+
+        function addSingleStudent() {
+            const id = document.getElementById('newStudentId').value.trim();
+            const name = document.getElementById('newStudentName').value.trim();
+            const grade = document.getElementById('newStudentGrade').value.trim();
+            const remarks = document.getElementById('newStudentRemarks').value.trim();
+
+            if (!id || !grade) {
+                alert("Please enter at least a Student ID and Grade.");
+                return;
+            }
+
+            // Check if student already exists, update or add
+            const existingIndex = studentsData.findIndex(s => String(s.id).trim() === id);
+            const newRecord = { id, name: name || "N/A", quiz: "Quiz 1", grade, remarks: remarks || "None" };
+
+            if (existingIndex >= 0) {
+                studentsData[existingIndex] = newRecord;
+            } else {
+                studentsData.push(newRecord);
+            }
+
+            localStorage.setItem('quiz_students_db', JSON.stringify(studentsData));
+            updateStudentCount();
+
+            // Clear inputs
+            document.getElementById('newStudentId').value = '';
+            document.getElementById('newStudentName').value = '';
+            document.getElementById('newStudentGrade').value = '';
+            document.getElementById('newStudentRemarks').value = '';
+
+            const msg = document.getElementById('addSuccessMsg');
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
         }
 
         function lookupGrade() {
