@@ -2,49 +2,536 @@
     <!-- SheetJS for Reading Excel (.xlsx, .xls, .csv) Files -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-    <!-- Global Stubs for Cloud Functions -->
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-indigo-200">
+                    <i class="fa-solid font-bold fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-900 leading-tight text-lg sm:text-xl" id="headerCourseTitle">Computer Science 101</h1>
+                    <p class="text-xs text-slate-500 font-medium" id="headerQuizTitle">Quiz 1 Results Portal</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="navStudentBtn" onclick="switchTab('student')" class="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 bg-indigo-50 text-indigo-700 shadow-sm">
+                    <i class="fa-solid fa-user-graduate mr-1.5"></i> Student Portal
+                </button>
+                <button id="navTeacherBtn" onclick="openTeacherAuthModal()" class="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-lock mr-1.5 text-xs"></i> Teacher Panel
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- STUDENT PORTAL SECTION -->
+        <section id="studentPortal" class="space-y-8 transition-opacity duration-300">
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-indigo-700 via-indigo-600 to-blue-600 rounded-3xl p-6 sm:p-10 text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 opacity-10 text-white">
+                    <i class="fa-solid fa-award text-9xl"></i>
+                </div>
+                <div class="max-w-2xl relative z-10">
+                    <span class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold tracking-wide uppercase text-indigo-100 border border-white/20">Official Grade Lookup</span>
+                    <h2 class="text-2xl sm:text-4xl font-extrabold mt-3 mb-2 leading-tight">Check Your Quiz Mark</h2>
+                    <p class="text-indigo-100 text-sm sm:text-base opacity-90">Enter your Student ID below to instantly view your score, breakdown, and pass/fail status.</p>
+                </div>
+            </div>
+
+            <!-- Search Card -->
+            <div class="max-w-xl mx-auto -mt-6 sm:-mt-10 relative z-20">
+                <div class="bg-white rounded-2xl shadow-xl p-4 sm:p-6 border border-slate-100">
+                    <form onsubmit="handleSearch(event)" class="space-y-4">
+                        <label for="studentIdInput" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Enter Your Student ID</label>
+                        <div class="relative flex items-center">
+                            <i class="fa-solid fa-id-card absolute left-4 text-slate-400 text-lg"></i>
+                            <input type="text" id="studentIdInput" placeholder="e.g. 2023001" required class="w-full pl-12 pr-28 py-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all">
+                            <button type="submit" class="absolute right-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-lg transition-all shadow-md hover:shadow-indigo-200">
+                                Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Result Display Card -->
+            <div id="resultCard" class="hidden max-w-xl mx-auto transition-all duration-300">
+                <!-- Result populated by JS -->
+            </div>
+
+            <!-- Not Found Card -->
+            <div id="notFoundCard" class="hidden max-w-xl mx-auto bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center space-y-3">
+                <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                    <i class="fa-solid fa-magnifying-glass-question"></i>
+                </div>
+                <h3 class="font-bold text-amber-900 text-lg">Student ID Not Found</h3>
+                <p class="text-sm text-amber-700">Please make sure you entered your correct Student ID. If you believe this is an error, please contact your professor.</p>
+            </div>
+        </section>
+
+        <!-- TEACHER PANEL SECTION -->
+        <section id="teacherPanel" class="hidden space-y-8">
+            <div class="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="px-3 py-1 bg-indigo-500/30 text-indigo-300 rounded-full text-xs font-semibold uppercase tracking-wider border border-indigo-500/30">Instructor Management</span>
+                    <h2 class="text-2xl font-bold mt-2">Grade Administration Dashboard</h2>
+                    <p class="text-slate-400 text-sm mt-1">Upload grade sheets, manage course details, and update student marks.</p>
+                </div>
+                <button onclick="switchTab('student')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-xl border border-slate-700 transition">
+                    <i class="fa-solid fa-eye mr-2"></i> Preview Student View
+                </button>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Total Students</p>
+                        <h4 class="text-2xl font-black text-slate-800" id="statTotalStudents">0</h4>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-calculator"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Class Average</p>
+                        <h4 class="text-2xl font-black text-slate-800" id="statClassAverage">0.0</h4>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Pass Rate</p>
+                        <h4 class="text-2xl font-black text-slate-800" id="statPassRate">0%</h4>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Passing Mark</p>
+                        <h4 class="text-2xl font-black text-slate-800" id="statPassingMark">50</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Content Tabs -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="border-b border-slate-200 bg-slate-50 px-6 py-3 flex flex-wrap gap-2">
+                    <button onclick="switchTeacherSubTab('upload')" id="tabBtnUpload" class="px-4 py-2 rounded-lg text-sm font-semibold bg-white text-indigo-600 shadow-sm border border-slate-200">
+                        <i class="fa-solid fa-file-excel mr-2 text-emerald-600"></i> Upload Excel / CSV
+                    </button>
+                    <button onclick="switchTeacherSubTab('records')" id="tabBtnRecords" class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-white hover:text-slate-800 transition">
+                        <i class="fa-solid fa-table-list mr-2 text-indigo-500"></i> Student Records
+                    </button>
+                    <button onclick="switchTeacherSubTab('settings')" id="tabBtnSettings" class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-white hover:text-slate-800 transition">
+                        <i class="fa-solid fa-gear mr-2 text-slate-500"></i> Settings
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <!-- SUBTAB 1: EXCEL UPLOAD -->
+                    <div id="subtabUpload" class="space-y-6">
+                        <div class="border-2 border-dashed border-indigo-200 rounded-2xl p-8 text-center bg-indigo-50/40 hover:bg-indigo-50/80 transition cursor-pointer relative" id="dropZone">
+                            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleExcelUpload(event)">
+                            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner">
+                                <i class="fa-solid fa-file-excel"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800">Upload Excel Sheet (.xlsx, .xls, .csv)</h3>
+                            <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Drag and drop your quiz spreadsheet here or click to browse. The sheet should have columns for Student ID, Name, and Mark.</p>
+                        </div>
+                    </div>
+
+                    <!-- SUBTAB 2: RECORDS -->
+                    <div id="subtabRecords" class="hidden space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-slate-800">Student List</h3>
+                            <button onclick="clearAllRecords()" class="text-xs font-semibold text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200 transition">
+                                <i class="fa-solid fa-trash mr-1"></i> Clear All Records
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs border-b border-slate-200">
+                                    <tr>
+                                        <th class="p-3">Student ID</th>
+                                        <th class="p-3">Name</th>
+                                        <th class="p-3">Mark</th>
+                                        <th class="p-3">Status</th>
+                                        <th class="p-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentTableBody" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- SUBTAB 3: SETTINGS -->
+                    <div id="subtabSettings" class="hidden max-w-xl space-y-5">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Course Name</label>
+                            <input type="text" id="settingCourseTitle" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl font-semibold text-slate-800">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Quiz Title</label>
+                            <input type="text" id="settingQuizTitle" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl font-semibold text-slate-800">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Total Quiz Points / Passing Mark</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <span class="text-xs text-slate-400 font-medium">Total Max Score</span>
+                                    <input type="number" id="settingMaxScore" class="w-full px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-800">
+                                </div>
+                                <div>
+                                    <span class="text-xs text-slate-400 font-medium">Pass Threshold</span>
+                                    <input type="number" id="settingPassingMark" class="w-full px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-800">
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="saveCourseSettings()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-md transition">
+                            Save Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 mt-auto">
+        <p>&copy; <span id="year"></span> University Quiz Grade Portal. All rights reserved.</p>
+    </footer>
+
+    <!-- PASSCODE MODAL -->
+    <div id="teacherAuthModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-5">
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h3 class="text-xl font-extrabold text-slate-800">Teacher Verification</h3>
+                <p class="text-xs text-slate-500">Please enter the security passcode to access the teacher panel.</p>
+            </div>
+
+            <form onsubmit="verifyTeacherPasscode(event)" class="space-y-4">
+                <div>
+                    <input type="password" id="teacherPasscodeInput" placeholder="Enter Security Key" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-center font-bold tracking-widest text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeTeacherAuthModal()" class="w-1/2 py-2.5 border border-slate-200 font-semibold text-slate-600 text-sm rounded-xl hover:bg-slate-50">Cancel</button>
+                    <button type="submit" class="w-1/2 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-md">Unlock Panel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP SCRIPT -->
     <script>
-        window.listenToCloudData = function() {};
-        window.saveCloudData = async function() {};
-    </script>
+        // Secret passcode requested
+        const SECRET_PASSCODE = 'ES2511976';
 
-    <!-- Firebase SDK Modules -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Default App State
+        let appState = {
+            courseTitle: "Computer Science 101",
+            quizTitle: "Quiz 1 Results",
+            maxScore: 100,
+            passingMark: 50,
+            students: [
+                { id: "2023001", name: "Alex Johnson", mark: 85 },
+                { id: "2023002", name: "Sarah Smith", mark: 92 },
+                { id: "2023003", name: "Michael Brown", mark: 45 },
+                { id: "2023004", name: "Emily Davis", mark: 78 }
+            ]
+        };
 
-        // Global Firebase References
-        window.db = null;
-        window.doc = doc;
-        window.getDoc = getDoc;
-        window.setDoc = setDoc;
-        window.onSnapshot = onSnapshot;
-        window.appId = typeof __app_id !== 'undefined' ? __app_id : 'univ-quiz-default';
+        // Initialize App
+        window.onload = function() {
+            const yearEl = document.getElementById('year');
+            if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-        try {
-            if (typeof __firebase_config !== 'undefined') {
-                const firebaseConfig = JSON.parse(__firebase_config);
-                const app = initializeApp(firebaseConfig);
-                window.db = getFirestore(app);
-                const auth = getAuth(app);
-
-                const initAuth = async () => {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                    if (typeof window.listenToCloudData === 'function') {
-                        window.listenToCloudData();
-                    }
-                };
-                initAuth();
+            // Load saved local data if present
+            const localData = localStorage.getItem('quiz_portal_state');
+            if (localData) {
+                try {
+                    appState = JSON.parse(localData);
+                } catch(e) {
+                    console.log("Using initial state");
+                }
             }
-        } catch (err) {
-            console.log("Local mode backup active");
+
+            renderAppState();
+        };
+
+        function saveState() {
+            localStorage.setItem('quiz_portal_state', JSON.stringify(appState));
+            renderAppState();
+        }
+
+        function renderAppState() {
+            document.getElementById('headerCourseTitle').textContent = appState.courseTitle;
+            document.getElementById('headerQuizTitle').textContent = appState.quizTitle;
+            document.getElementById('settingCourseTitle').value = appState.courseTitle;
+            document.getElementById('settingQuizTitle').value = appState.quizTitle;
+            document.getElementById('settingMaxScore').value = appState.maxScore;
+            document.getElementById('settingPassingMark').value = appState.passingMark;
+
+            // Render Stats
+            const total = appState.students.length;
+            document.getElementById('statTotalStudents').textContent = total;
+            document.getElementById('statPassingMark').textContent = appState.passingMark;
+
+            if (total > 0) {
+                const sum = appState.students.reduce((acc, s) => acc + Number(s.mark), 0);
+                const avg = (sum / total).toFixed(1);
+                const passed = appState.students.filter(s => Number(s.mark) >= appState.passingMark).length;
+                const passRate = Math.round((passed / total) * 100);
+
+                document.getElementById('statClassAverage').textContent = avg;
+                document.getElementById('statPassRate').textContent = passRate + '%';
+            } else {
+                document.getElementById('statClassAverage').textContent = "0.0";
+                document.getElementById('statPassRate').textContent = "0%";
+            }
+
+            // Render Table
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '';
+            appState.students.forEach((student, index) => {
+                const isPassed = Number(student.mark) >= appState.passingMark;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-slate-800">${student.id}</td>
+                    <td class="p-3">${student.name}</td>
+                    <td class="p-3 font-bold">${student.mark} / ${appState.maxScore}</td>
+                    <td class="p-3">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${isPassed ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                            ${isPassed ? 'PASS' : 'FAIL'}
+                        </span>
+                    </td>
+                    <td class="p-3 text-right">
+                        <button onclick="deleteStudent(${index})" class="text-rose-500 hover:text-rose-700 font-bold text-xs">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Student Search Logic
+        function handleSearch(e) {
+            e.preventDefault();
+            const idInput = document.getElementById('studentIdInput').value.trim();
+            const resultCard = document.getElementById('resultCard');
+            const notFoundCard = document.getElementById('notFoundCard');
+
+            const student = appState.students.find(s => String(s.id).trim() === idInput);
+
+            if (student) {
+                notFoundCard.classList.add('hidden');
+                const isPassed = Number(student.mark) >= appState.passingMark;
+                const percent = Math.min(100, Math.round((Number(student.mark) / appState.maxScore) * 100));
+
+                resultCard.innerHTML = `
+                    <div class="bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6">
+                        <div class="flex justify-between items-start border-b border-slate-100 pb-4">
+                            <div>
+                                <h3 class="text-2xl font-black text-slate-800">${student.name}</h3>
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">Student ID: ${student.id}</p>
+                            </div>
+                            <span class="px-4 py-1.5 rounded-full text-xs font-extrabold tracking-wide uppercase ${isPassed ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}">
+                                ${isPassed ? 'PASSED' : 'NEEDS IMPROVEMENT'}
+                            </span>
+                        </div>
+
+                        <div class="bg-slate-50 p-6 rounded-2xl flex items-center justify-between border border-slate-100">
+                            <div>
+                                <span class="text-xs font-bold uppercase text-slate-400">Quiz Score</span>
+                                <div class="text-4xl font-black text-slate-900 mt-1">${student.mark} <span class="text-lg text-slate-400 font-semibold">/ ${appState.maxScore}</span></div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-bold uppercase text-slate-400">Percentage</span>
+                                <div class="text-3xl font-black text-indigo-600 mt-1">${percent}%</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs font-bold text-slate-500 mb-2">
+                                <span>Performance Meter</span>
+                                <span>Passing Score: ${appState.passingMark}</span>
+                            </div>
+                            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full ${isPassed ? 'bg-emerald-500' : 'bg-rose-500'} transition-all duration-500" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultCard.classList.remove('hidden');
+            } else {
+                resultCard.classList.add('hidden');
+                notFoundCard.classList.remove('hidden');
+            }
+        }
+
+        // Tab Switching
+        function switchTab(tab) {
+            const studentPortal = document.getElementById('studentPortal');
+            const teacherPanel = document.getElementById('teacherPanel');
+            const navStudentBtn = document.getElementById('navStudentBtn');
+            const navTeacherBtn = document.getElementById('navTeacherBtn');
+
+            if (tab === 'student') {
+                studentPortal.classList.remove('hidden');
+                teacherPanel.classList.add('hidden');
+                navStudentBtn.className = "px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 bg-indigo-50 text-indigo-700 shadow-sm";
+                navTeacherBtn.className = "px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 text-slate-600 hover:bg-slate-100";
+            } else {
+                studentPortal.classList.add('hidden');
+                teacherPanel.classList.remove('hidden');
+                navTeacherBtn.className = "px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 bg-indigo-50 text-indigo-700 shadow-sm";
+                navStudentBtn.className = "px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 text-slate-600 hover:bg-slate-100";
+            }
+        }
+
+        function switchTeacherSubTab(subtab) {
+            ['subtabUpload', 'subtabRecords', 'subtabSettings'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            ['tabBtnUpload', 'tabBtnRecords', 'tabBtnSettings'].forEach(id => {
+                document.getElementById(id).className = "px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-white hover:text-slate-800 transition";
+            });
+
+            if (subtab === 'upload') {
+                document.getElementById('subtabUpload').classList.remove('hidden');
+                document.getElementById('tabBtnUpload').className = "px-4 py-2 rounded-lg text-sm font-semibold bg-white text-indigo-600 shadow-sm border border-slate-200";
+            } else if (subtab === 'records') {
+                document.getElementById('subtabRecords').classList.remove('hidden');
+                document.getElementById('tabBtnRecords').className = "px-4 py-2 rounded-lg text-sm font-semibold bg-white text-indigo-600 shadow-sm border border-slate-200";
+            } else if (subtab === 'settings') {
+                document.getElementById('subtabSettings').classList.remove('hidden');
+                document.getElementById('tabBtnSettings').className = "px-4 py-2 rounded-lg text-sm font-semibold bg-white text-indigo-600 shadow-sm border border-slate-200";
+            }
+        }
+
+        // Passcode Protection
+        function openTeacherAuthModal() {
+            document.getElementById('teacherAuthModal').classList.remove('hidden');
+        }
+
+        function closeTeacherAuthModal() {
+            document.getElementById('teacherAuthModal').classList.add('hidden');
+        }
+
+        function verifyTeacherPasscode(e) {
+            e.preventDefault();
+            const input = document.getElementById('teacherPasscodeInput').value.trim();
+            if (input === SECRET_PASSCODE) {
+                closeTeacherAuthModal();
+                switchTab('teacher');
+                document.getElementById('teacherPasscodeInput').value = '';
+            } else {
+                alert('Invalid Passcode! Access Denied.');
+            }
+        }
+
+        // Excel Handling
+        function handleExcelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                const newStudents = [];
+                for (let i = 1; i < json.length; i++) {
+                    const row = json[i];
+                    if (row && row.length >= 2) {
+                        newStudents.push({
+                            id: String(row[0]).trim(),
+                            name: String(row[1]).trim(),
+                            mark: Number(row[2]) || 0
+                        });
+                    }
+                }
+
+                if (newStudents.length > 0) {
+                    appState.students = newStudents;
+                    saveState();
+                    alert(`Successfully imported ${newStudents.length} student marks!`);
+                    switchTeacherSubTab('records');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function deleteStudent(index) {
+            appState.students.splice(index, 1);
+            saveState();
+        }
+
+        function clearAllRecords() {
+            if (confirm('Are you sure you want to delete all student records?')) {
+                appState.students = [];
+                saveState();
+            }
+        }
+
+        function saveCourseSettings() {
+            appState.courseTitle = document.getElementById('settingCourseTitle').value;
+            appState.quizTitle = document.getElementById('settingQuizTitle').value;
+            appState.maxScore = Number(document.getElementById('settingMaxScore').value) || 100;
+            appState.passingMark = Number(document.getElementById('settingPassingMark').value) || 50;
+            saveState();
+            alert('Settings updated successfully!');
         }
     </script>
-
-    <!-- Google Fonts -->
-<!-- ... existing code -->
+</body>
+</html>
